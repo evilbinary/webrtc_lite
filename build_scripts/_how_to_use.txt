@@ -1,0 +1,25 @@
+linux和android都在ubuntu 14.04下编译
+请先安装webrtc依赖包（java gtk opengl等）
+sudo apt-get install git openjdk-7-jdk subversion ant ninja-build libasound2-dev libgtk2.0-dev libxtst-dev libxss-dev libudev-dev libdbus-1-dev libgconf2-dev libgnome-keyring-dev libpci-dev libnss3-dev mesa-common-dev libpulse-dev libgl1-mesa-dev
+
+设置本机环境变量 ~/.bashrc（DEPOT_TOOLS=/root/depot_tools自行修改位置）
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+export JRE_HOME=$JAVA_HOME/jre
+export DEPOT_TOOLS=/root/depot_tools
+export PATH=$PATH:$DEPOT_TOOLS:$JAVA_HOME/bin:$JRE_HOME/bin
+以上为linux和安卓需要做的准备工作
+windows和mac按各自方式指定depot tool的path（下次我把depot tools带在包里面）
+================================================================
+android需要自己安装ndk和sdk
+在create_projects_android.sh中设置ndk和sdk路径
+
+
+windows使用VS2015编译的，
+如果是是其他版本merge_windows_lib.bat（合并lib库）中修改VS140COMNTOOLS环境变量以适应版本
+
+copy_source中指定webrtc源码目录src
+
+完成以上准备工作
+copy_source_***
+create_projects_***
+build_***

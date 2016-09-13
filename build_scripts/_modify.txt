@@ -1,0 +1,87 @@
+
+build/common.gypi 
+
+line 3433 使用bitcode编译（apple 默认需要,生成优化中间代码和指令集无关等代码，体积会增大三倍）
+OTHER_CFLAGS': [ '<@(release_extra_cflags)', '-fembed-bitcode',],
+
+tools/gyp/pylib/xcode_emulation.py下的
+_GetIOSPostbuilds中 return [] 跳过ios签名 （xcode有开发者账号会签名失败）
+
+third_party/opus/opus.gyp中关闭
+'-Wno-expansion-to-defined'，引起clang报错
+
+//==============以下为可选修改
+
+linux和android导出所有符号（外部可以调用所有函数）
+
+build/common.gypi
+注释'-fvisibility=hidden',
+
+//优化不生成日志代码
+webrtc/build/commom.gypi中
+'restrict_webrtc_logging' : 1 关闭日志
+
+//避免导出所有符号影响vpx的汇编符号
+libvpx_srcs_x86_64_intrinsics.gypi中加入
+  'target_defaults': {
+    'target_conditions': [
+      ['_type=="static_library"', {'cflags': ['-fvisibility=hidden']}],
+    ],
+  },
+
+如果需要linux动态库
+在all.gyp中增加linux的动态库目标
+	{
+			'target_name': 'libwebrtc',
+			'type': 'shared_library',
+			'dependencies': [
+			  '<(webrtc_root)/api/api.gyp:libjingle_peerconnection',
+				'<(webrtc_root)/system_wrappers/system_wrappers.gyp:field_trial_default',
+				'<@(webrtc_root_additional_dependencies)',
+			],
+			'conditions': [
+				['OS=="linux"', {
+					'cflags': [
+						'<!@(pkg-config --cflags glib-2.0 gobject-2.0 gtk+-2.0)',
+					],
+					'link_settings': {
+						'ldflags': [
+						  '<!@(pkg-config --libs-only-L --libs-only-other glib-2.0'
+							  ' gobject-2.0 gthread-2.0 gtk+-2.0)',
+						],
+						'libraries': [
+						  '<!@(pkg-config --libs-only-l glib-2.0 gobject-2.0'
+							  ' gthread-2.0 gtk+-2.0)',
+										'-lstdc++',
+						],
+					},
+				}],#linux
+
+				['OS=="android"', {
+					'dependencies': [
+						'webrtc/api/api.gyp:libjingle_peerconnection_jni',
+					],
+				}],#android
+				
+				['OS=="win"', {
+					'msvs_settings': {
+						'VCCLCompilerTool': {
+							
+						},
+						'VCLinkerTool': {
+						  'AdditionalDependencies': [
+							'd3d9.lib',
+							'gdi32.lib',
+							'strmiids.lib',
+							'winmm.lib',
+						  ],
+						  'AdditionalOptions': [
+							  '/NOENTRY',
+						  ],
+						},
+						
+					},
+				}],#win
+
+			],#conditions	
+	},
